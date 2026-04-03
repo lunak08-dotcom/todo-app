@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      background: #f7f7f7;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #ebebeb;
+      padding: 18px 24px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 700; }
+    header small { font-size: 0.8rem; color: #aaa; }
+
+    .container { max-width: 660px; margin: 0 auto; padding: 24px 16px; }
+
+    /* 입력 폼 */
+    .form-card {
+      background: #fff;
+      border: 1px solid #ebebeb;
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .form-row:last-child { margin-bottom: 0; }
+
+    input[type="text"], input[type="date"], select, textarea {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px 11px;
+      font-size: 0.88rem;
+      outline: none;
+      background: #fff;
+      color: #222;
+      transition: border 0.15s;
+      font-family: inherit;
+    }
+    input:focus, select:focus { border-color: #555; }
+
+    #input-title { flex: 1; min-width: 200px; }
+
+    .btn-primary {
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 0.88rem;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { background: #000; }
+
+    /* 검색/필터 */
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    #search { flex: 1; min-width: 160px; }
+
+    /* 탭 */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 0.82rem;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .tab-btn:hover { background: #f0f0f0; }
+    .tab-btn.active { background: #222; color: #fff; border-color: #222; font-weight: 600; }
+
+    /* 진행률 */
+    .progress-wrap { margin-bottom: 16px; }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: #aaa;
+      margin-bottom: 5px;
+    }
+    .progress-bar { height: 4px; background: #ebebeb; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #222; border-radius: 4px; transition: width 0.3s; }
+
+    /* 목록 */
+    .todo-list { display: flex; flex-direction: column; gap: 7px; }
+
+    .todo-item {
+      background: #fff;
+      border: 1px solid #ebebeb;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .todo-item.done { opacity: 0.45; }
+    .todo-item.done .todo-text { text-decoration: line-through; color: #999; }
+
+    .priority-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .todo-check {
+      width: 16px; height: 16px;
+      accent-color: #222;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .todo-body { flex: 1; min-width: 0; }
+    .todo-text { font-size: 0.92rem; line-height: 1.4; word-break: break-all; }
+
+    .todo-meta {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+
+    /* 카테고리 색상 */
+    .cat-수업 { background: #e8f0fe; color: #2a52c9; }
+    .cat-가족 { background: #fce8e6; color: #b31412; }
+    .cat-조합 { background: #e6f4ea; color: #0f6d2e; }
+    .cat-쇼핑 { background: #fef3c7; color: #92600a; }
+    .cat-기타 { background: #f1f3f4; color: #5f6368; }
+
+    /* 마감일 */
+    .due-ok   { background: #eaf4ea; color: #3a7a3a; }
+    .due-soon { background: #fff5d6; color: #9a7a10; }
+    .due-today{ background: #ffe0b2; color: #c07000; }
+    .due-over { background: #fde8e8; color: #b52020; }
+
+    .todo-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: #ccc;
+      padding: 3px 5px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      font-family: inherit;
+    }
+    .btn-icon:hover { color: #333; background: #f0f0f0; }
+
+    /* 수정 인라인 폼 */
+    .edit-form { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+    .edit-actions { display: flex; gap: 7px; }
+    .btn-sm {
+      border: none;
+      border-radius: 5px;
+      padding: 5px 13px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-sm-dark { background: #222; color: #fff; }
+    .btn-sm-dark:hover { background: #000; }
+    .btn-sm-light { background: #f0f0f0; color: #333; }
+    .btn-sm-light:hover { background: #e0e0e0; }
+
+    .empty { text-align: center; color: #bbb; font-size: 0.88rem; padding: 36px 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Todo</h1>
+  <small id="today-str"></small>
+</header>
+
+<div class="container">
+
+  <!-- 입력 폼 -->
+  <div class="form-card">
+    <div class="form-row">
+      <input type="text" id="input-title" placeholder="할 일을 입력하세요" />
+      <button class="btn-primary" onclick="addTodo()">추가</button>
+    </div>
+    <div class="form-row">
+      <select id="input-cat">
+        <option value="수업">수업</option>
+        <option value="가족">가족</option>
+        <option value="조합">조합</option>
+        <option value="쇼핑">쇼핑</option>
+        <option value="기타" selected>기타</option>
+      </select>
+      <select id="input-priority">
+        <option value="high">높음</option>
+        <option value="mid" selected>중간</option>
+        <option value="low">낮음</option>
+      </select>
+      <input type="date" id="input-due" />
+    </div>
+  </div>
+
+  <!-- 검색 + 필터 -->
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="검색..." oninput="render()" />
+    <select id="filter-status" onchange="render()">
+      <option value="">전체 상태</option>
+      <option value="active">미완료</option>
+      <option value="done">완료</option>
+    </select>
+    <select id="filter-priority" onchange="render()">
+      <option value="">전체 우선순위</option>
+      <option value="high">높음</option>
+      <option value="mid">중간</option>
+      <option value="low">낮음</option>
+    </select>
+  </div>
+
+  <!-- 카테고리 탭 -->
+  <div class="tabs">
+    <button class="tab-btn active" data-cat="전체" onclick="selectTab(this)">전체</button>
+    <button class="tab-btn" data-cat="수업"  onclick="selectTab(this)">수업</button>
+    <button class="tab-btn" data-cat="가족"  onclick="selectTab(this)">가족</button>
+    <button class="tab-btn" data-cat="조합"  onclick="selectTab(this)">조합</button>
+    <button class="tab-btn" data-cat="쇼핑"  onclick="selectTab(this)">쇼핑</button>
+    <button class="tab-btn" data-cat="기타"  onclick="selectTab(this)">기타</button>
+  </div>
+
+  <!-- 진행률 -->
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="progress-text">0 / 0 완료</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- 목록 -->
+  <div class="todo-list" id="todo-list"></div>
+
+</div>
+
+<script>
+  let todos = JSON.parse(localStorage.getItem('my-todos') || '[]');
+  let currentTab = '전체';
+
+  const PRIORITY_COLOR = { high: '#e57373', mid: '#f5c842', low: '#72b572' };
+  const PRIORITY_LABEL = { high: '높음', mid: '중간', low: '낮음' };
+  const CATS = ['수업','가족','조합','쇼핑','기타'];
+
+  // 오늘 날짜
+  document.getElementById('today-str').textContent =
+    new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+
+  function save() { localStorage.setItem('my-todos', JSON.stringify(todos)); }
+
+  function selectTab(btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab = btn.dataset.cat;
+    render();
+  }
+
+  function getDueBadge(dueStr, done) {
+    if (!dueStr) return '';
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due   = new Date(dueStr); due.setHours(0,0,0,0);
+    const diff  = Math.round((due - today) / 86400000);
+    if (done) return `<span class="badge due-ok">${dueStr}</span>`;
+    if (diff < 0)  return `<span class="badge due-over">기한 초과</span>`;
+    if (diff === 0) return `<span class="badge due-today">오늘 마감</span>`;
+    if (diff <= 3)  return `<span class="badge due-soon">D-${diff}</span>`;
+    return `<span class="badge due-ok">D-${diff}</span>`;
+  }
+
+  function addTodo() {
+    const title = document.getElementById('input-title').value.trim();
+    if (!title) { document.getElementById('input-title').focus(); return; }
+    todos.unshift({
+      id: Date.now(),
+      text: title,
+      cat: document.getElementById('input-cat').value,
+      priority: document.getElementById('input-priority').value,
+      due: document.getElementById('input-due').value,
+      done: false
+    });
+    document.getElementById('input-title').value = '';
+    document.getElementById('input-due').value = '';
+    save(); render();
+  }
+
+  function toggleDone(id) {
+    const t = todos.find(t => t.id === id);
+    if (t) { t.done = !t.done; save(); render(); }
+  }
+
+  function deleteTodo(id) {
+    todos = todos.filter(t => t.id !== id);
+    save(); render();
+  }
+
+  function startEdit(id) { render(id); }
+
+  function saveEdit(id) {
+    const t = todos.find(t => t.id === id);
+    if (!t) return;
+    const title = document.getElementById(`et-${id}`).value.trim();
+    if (!title) return;
+    t.text     = title;
+    t.cat      = document.getElementById(`ec-${id}`).value;
+    t.priority = document.getElementById(`ep-${id}`).value;
+    t.due      = document.getElementById(`ed-${id}`).value;
+    save(); render();
+  }
+
+  function getFiltered() {
+    const q    = document.getElementById('search').value.trim().toLowerCase();
+    const stat = document.getElementById('filter-status').value;
+    const pri  = document.getElementById('filter-priority').value;
+
+    return todos.filter(t => {
+      if (currentTab !== '전체' && t.cat !== currentTab) return false;
+      if (q   && !t.text.toLowerCase().includes(q)) return false;
+      if (stat === 'active' && t.done)  return false;
+      if (stat === 'done'   && !t.done) return false;
+      if (pri && t.priority !== pri) return false;
+      return true;
+    }).sort((a, b) => a.done === b.done ? 0 : a.done ? 1 : -1);
+  }
+
+  function render(editingId = null) {
+    const list = document.getElementById('todo-list');
+    const filtered = getFiltered();
+    const total = filtered.length;
+    const done  = filtered.filter(t => t.done).length;
+    const pct   = total === 0 ? 0 : Math.round(done / total * 100);
+
+    document.getElementById('progress-text').textContent = `${done} / ${total} 완료`;
+    document.getElementById('progress-pct').textContent  = `${pct}%`;
+    document.getElementById('progress-fill').style.width = `${pct}%`;
+
+    if (total === 0) {
+      list.innerHTML = '<div class="empty">할 일이 없습니다.</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(t => {
+      if (t.id === editingId) {
+        return `
+          <div class="todo-item">
+            <span class="priority-dot" style="background:${PRIORITY_COLOR[t.priority]}"></span>
+            <div class="edit-form">
+              <div class="form-row">
+                <input type="text" id="et-${t.id}" value="${esc(t.text)}" style="flex:1;min-width:0" />
+              </div>
+              <div class="form-row">
+                <select id="ec-${t.id}">
+                  ${CATS.map(c => `<option${t.cat===c?' selected':''}>${c}</option>`).join('')}
+                </select>
+                <select id="ep-${t.id}">
+                  ${['high','mid','low'].map(p => `<option value="${p}"${t.priority===p?' selected':''}>${PRIORITY_LABEL[p]}</option>`).join('')}
+                </select>
+                <input type="date" id="ed-${t.id}" value="${t.due||''}" />
+              </div>
+              <div class="edit-actions">
+                <button class="btn-sm btn-sm-dark" onclick="saveEdit(${t.id})">저장</button>
+                <button class="btn-sm btn-sm-light" onclick="render()">취소</button>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <div class="todo-item${t.done ? ' done' : ''}">
+          <span class="priority-dot" style="background:${PRIORITY_COLOR[t.priority]}"></span>
+          <input type="checkbox" class="todo-check" ${t.done?'checked':''} onchange="toggleDone(${t.id})" />
+          <div class="todo-body">
+            <div class="todo-text">${esc(t.text)}</div>
+            <div class="todo-meta">
+              <span class="badge cat-${t.cat}">${t.cat}</span>
+              ${getDueBadge(t.due, t.done)}
+            </div>
+          </div>
+          <div class="todo-actions">
+            <button class="btn-icon" onclick="startEdit(${t.id})">수정</button>
+            <button class="btn-icon" onclick="deleteTodo(${t.id})">삭제</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('input-title').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+  });
+
+  render();
+</script>
+</body>
+</html>
