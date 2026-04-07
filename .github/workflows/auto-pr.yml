@@ -1,0 +1,36 @@
+name: feature 브랜치 PR 자동 생성
+
+on:
+  push:
+    branches:
+      - 'feature/**'   # feature/로 시작하는 브랜치에 push될 때 실행
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      # 이미 PR이 있으면 새로 만들지 않음
+      - name: PR 자동 생성
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: master
+          title: "[${{ github.ref_name }}] 자동 생성 PR"
+          body: |
+            ## 자동 생성된 PR
+
+            - **브랜치**: `${{ github.ref_name }}`
+            - **작성자**: ${{ github.actor }}
+            - **커밋**: ${{ github.sha }}
+
+            ---
+            > 이 PR은 GitHub Actions에 의해 자동 생성되었습니다.
+            > 코드 리뷰 후 머지해주세요.
+          draft: false
