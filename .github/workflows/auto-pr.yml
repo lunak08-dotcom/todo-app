@@ -16,21 +16,29 @@ jobs:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
 
-      # 이미 PR이 있으면 새로 만들지 않음
+      - name: 이미 PR이 있는지 확인
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COUNT=$(gh pr list --head "${{ github.ref_name }}" --base master --json number --jq length)
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+
       - name: PR 자동 생성
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: master
-          title: "[${{ github.ref_name }}] 자동 생성 PR"
-          body: |
-            ## 자동 생성된 PR
+        if: steps.check-pr.outputs.count == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base master \
+            --head "${{ github.ref_name }}" \
+            --title "[${{ github.ref_name }}] 자동 생성 PR" \
+            --body "## 자동 생성된 PR
 
-            - **브랜치**: `${{ github.ref_name }}`
-            - **작성자**: ${{ github.actor }}
-            - **커밋**: ${{ github.sha }}
+          - **브랜치**: \`${{ github.ref_name }}\`
+          - **작성자**: ${{ github.actor }}
+          - **커밋**: ${{ github.sha }}
 
-            ---
-            > 이 PR은 GitHub Actions에 의해 자동 생성되었습니다.
-            > 코드 리뷰 후 머지해주세요.
-          draft: false
+          ---
+          > 이 PR은 GitHub Actions에 의해 자동 생성되었습니다.
+          > 코드 리뷰 후 머지해주세요."
