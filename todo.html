@@ -469,6 +469,11 @@ input:focus, select:focus { border-color: #4a70c0; }
     <div id="hdr-progress">
       <div id="hdr-prog-bar"><div id="hdr-prog-fill" style="width:0%"></div></div>
       <span id="hdr-prog-txt">0 / 0 완료</span>
+      <button id="btn-clear-done" onclick="clearDone()" title="완료 항목 일괄 삭제" style="
+        background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);
+        color:#7a8dae;font-size:0.65rem;padding:2px 7px;border-radius:4px;
+        cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s;display:none;
+      ">완료 삭제</button>
     </div>
   </div>
 
@@ -695,6 +700,13 @@ function toggleDone(id) {
   if (t) { t.done = !t.done; saveTodos(); renderTodo(); }
 }
 function deleteTodo(id) { todos = todos.filter(t => t.id !== id); saveTodos(); renderTodo(); }
+function clearDone() {
+  const count = todos.filter(t => t.done).length;
+  if (!count) return;
+  if (!confirm(`완료된 항목 ${count}개를 삭제할까요?`)) return;
+  todos = todos.filter(t => !t.done);
+  saveTodos(); renderTodo();
+}
 function startEdit(id)  { renderTodo(id); }
 function saveEdit(id) {
   const t = todos.find(t => t.id === id);
@@ -734,6 +746,7 @@ function renderTodo(editId = null) {
 
   document.getElementById('hdr-prog-fill').style.width = `${pct}%`;
   document.getElementById('hdr-prog-txt').textContent  = `${done} / ${total} 완료`;
+  document.getElementById('btn-clear-done').style.display = done > 0 ? 'block' : 'none';
 
   if (total === 0) { list.innerHTML = '<div class="empty">할 일이 없습니다.</div>'; return; }
 
