@@ -227,6 +227,28 @@ input:focus, select:focus { border-color: #4a70c0; }
 .tab-btn:hover  { background: #eef0f8; }
 .tab-btn.active { background: #2a3560; color: #fff; border-color: #2a3560; font-weight: 600; }
 
+/* 우선순위 필터 */
+.pri-filters { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
+.pri-label   { font-size: 0.68rem; color: #9aa0b8; flex-shrink: 0; }
+.pri-btn {
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid #d0d5e8;
+  background: #fff;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 3px;
+}
+.pri-btn:hover { background: #eef0f8; }
+.pri-btn.active { color: #fff; border-color: transparent; font-weight: 600; }
+.pri-btn[data-pri="all"].active  { background: #2a3560; }
+.pri-btn[data-pri="high"].active { background: #e57373; }
+.pri-btn[data-pri="mid"].active  { background: #d4a72c; }
+.pri-btn[data-pri="low"].active  { background: #5aaa5a; }
+.pri-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
 /* Todo 아이템 */
 .todo-list { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
 .todo-item {
@@ -498,6 +520,14 @@ input:focus, select:focus { border-color: #4a70c0; }
         <button class="tab-btn" data-cat="기타"  onclick="selectTab(this)">기타</button>
       </div>
 
+      <div class="pri-filters">
+        <span class="pri-label">우선순위</span>
+        <button class="pri-btn active" data-pri="all"  onclick="selectPri(this)">전체</button>
+        <button class="pri-btn"        data-pri="high" onclick="selectPri(this)"><span class="pri-dot" style="background:#e57373"></span>높음</button>
+        <button class="pri-btn"        data-pri="mid"  onclick="selectPri(this)"><span class="pri-dot" style="background:#f5c842"></span>중간</button>
+        <button class="pri-btn"        data-pri="low"  onclick="selectPri(this)"><span class="pri-dot" style="background:#72b572"></span>낮음</button>
+      </div>
+
       <div class="todo-list" id="todo-list"></div>
 
     </div><!-- /todo-body -->
@@ -611,6 +641,7 @@ setInterval(fetchWeather, 30 * 60 * 1000);
 ═══════════════════════════════════════ */
 let todos      = JSON.parse(localStorage.getItem('my-todos') || '[]');
 let currentTab = '전체';
+let currentPri = 'all';
 const P_COLOR  = { high: '#e57373', mid: '#f5c842', low: '#72b572' };
 const P_LABEL  = { high: '높음', mid: '중간', low: '낮음' };
 const CATS     = ['수업','가족','조합','쇼핑','기타'];
@@ -621,6 +652,13 @@ function selectTab(btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentTab = btn.dataset.cat;
+  renderTodo();
+}
+
+function selectPri(btn) {
+  document.querySelectorAll('.pri-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentPri = btn.dataset.pri;
   renderTodo();
 }
 
@@ -675,6 +713,7 @@ function getFiltered() {
   const st = document.getElementById('filter-status').value;
   return todos.filter(t => {
     if (currentTab !== '전체' && t.cat !== currentTab) return false;
+    if (currentPri !== 'all'  && t.priority !== currentPri) return false;
     if (q  && !t.text.toLowerCase().includes(q)) return false;
     if (st === 'active' &&  t.done) return false;
     if (st === 'done'   && !t.done) return false;
