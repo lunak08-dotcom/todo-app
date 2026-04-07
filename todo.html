@@ -1,450 +1,949 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Todo</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나의 대시보드</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
 
-    body {
-      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
-      background: #f7f7f7;
-      color: #222;
-      min-height: 100vh;
-    }
+body {
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: #0f1523;
+}
 
-    header {
-      background: #fff;
-      border-bottom: 1px solid #ebebeb;
-      padding: 18px 24px;
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-    }
-    header h1 { font-size: 1.2rem; font-weight: 700; }
-    header small { font-size: 0.8rem; color: #aaa; }
+/* ══════════════════════════════════════
+   TOPBAR
+══════════════════════════════════════ */
+#topbar {
+  height: 70px;
+  background: linear-gradient(90deg, #141929 0%, #1c2540 50%, #141929 100%);
+  border-bottom: 1px solid #252e48;
+  color: #c5d2e8;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  flex-shrink: 0;
+  gap: 0;
+}
 
-    .container { max-width: 660px; margin: 0 auto; padding: 24px 16px; }
+/* 시계 */
+#dt-sec {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 16px;
+  min-width: 170px;
+  flex-shrink: 0;
+}
+#clock {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #e8eef8;
+  letter-spacing: 2px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+#dateline {
+  font-size: 0.68rem;
+  color: #7a8dae;
+  margin-top: 2px;
+  white-space: nowrap;
+}
 
-    /* 입력 폼 */
-    .form-card {
-      background: #fff;
-      border: 1px solid #ebebeb;
-      border-radius: 8px;
-      padding: 18px;
-      margin-bottom: 16px;
-    }
+/* 구분선 */
+.tb-div {
+  width: 1px;
+  height: 34px;
+  background: #252e48;
+  margin: 0 14px;
+  flex-shrink: 0;
+}
 
-    .form-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-    .form-row:last-child { margin-bottom: 0; }
+/* 날씨 */
+#weather-sec {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+  flex-shrink: 0;
+}
+#w-icon { font-size: 1.8rem; line-height: 1; }
+#w-temp { font-size: 1.05rem; font-weight: 700; color: #e8eef8; }
+#w-desc { font-size: 0.68rem; color: #7a8dae; margin-top: 1px; }
 
-    input[type="text"], input[type="date"], select, textarea {
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 8px 11px;
-      font-size: 0.88rem;
-      outline: none;
-      background: #fff;
-      color: #222;
-      transition: border 0.15s;
-      font-family: inherit;
-    }
-    input:focus, select:focus { border-color: #555; }
+/* 날씨 새로고침 버튼 */
+#tb-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 14px;
+  flex-shrink: 0;
+}
+#tb-refresh {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid #252e48;
+  color: #7a8dae;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+#tb-refresh:hover { background: #252e48; color: #c5d2e8; }
 
-    #input-title { flex: 1; min-width: 200px; }
+/* ══════════════════════════════════════
+   DASHBOARD GRID
+══════════════════════════════════════ */
+#dashboard {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
 
-    .btn-primary {
-      background: #222;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 18px;
-      font-size: 0.88rem;
-      cursor: pointer;
-      font-family: inherit;
-      white-space: nowrap;
-    }
-    .btn-primary:hover { background: #000; }
+/* ══════════════════════════════════════
+   TODO PANEL (LEFT)
+══════════════════════════════════════ */
+#todo-panel {
+  overflow-y: auto;
+  padding: 14px;
+  background: #f0f2f6;
+  border-right: 1px solid #d6daea;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+#todo-panel::-webkit-scrollbar { width: 5px; }
+#todo-panel::-webkit-scrollbar-track { background: transparent; }
+#todo-panel::-webkit-scrollbar-thumb { background: #c8cede; border-radius: 4px; }
 
-    /* 검색/필터 */
-    .toolbar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-    #search { flex: 1; min-width: 160px; }
+.panel-hdr {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1c2540;
+}
+.panel-title { font-size: 0.95rem; font-weight: 700; color: #1c2540; }
+.panel-sub   { font-size: 0.72rem; color: #a0aac0; }
 
-    /* 탭 */
-    .tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-    .tab-btn {
-      padding: 5px 14px;
-      border-radius: 20px;
-      border: 1px solid #ddd;
-      background: #fff;
-      font-size: 0.82rem;
-      color: #666;
-      cursor: pointer;
-      transition: all 0.15s;
-      font-family: inherit;
-    }
-    .tab-btn:hover { background: #f0f0f0; }
-    .tab-btn.active { background: #222; color: #fff; border-color: #222; font-weight: 600; }
+/* 입력 폼 */
+.form-card {
+  background: #fff;
+  border: 1px solid #dde2ef;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.form-row { display: flex; gap: 6px; margin-bottom: 7px; flex-wrap: wrap; }
+.form-row:last-child { margin-bottom: 0; }
 
-    /* 진행률 */
-    .progress-wrap { margin-bottom: 16px; }
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.78rem;
-      color: #aaa;
-      margin-bottom: 5px;
-    }
-    .progress-bar { height: 4px; background: #ebebeb; border-radius: 4px; overflow: hidden; }
-    .progress-fill { height: 100%; background: #222; border-radius: 4px; transition: width 0.3s; }
+input[type="text"], input[type="date"], select {
+  border: 1px solid #dde2ef;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 0.84rem;
+  outline: none;
+  background: #fff;
+  color: #222;
+  font-family: inherit;
+  transition: border 0.15s;
+}
+input:focus, select:focus { border-color: #4a6fa0; }
+#input-title { flex: 1; min-width: 160px; }
 
-    /* 목록 */
-    .todo-list { display: flex; flex-direction: column; gap: 7px; }
+.btn-primary {
+  background: #1c2540;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 16px;
+  font-size: 0.84rem;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: #0e1526; }
 
-    .todo-item {
-      background: #fff;
-      border: 1px solid #ebebeb;
-      border-radius: 8px;
-      padding: 12px 14px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      animation: fadeIn 0.2s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .todo-item.done { opacity: 0.45; }
-    .todo-item.done .todo-text { text-decoration: line-through; color: #999; }
+/* 검색/필터 */
+.toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
+#search  { flex: 1; min-width: 130px; }
 
-    .priority-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 5px;
-    }
+/* 탭 */
+.tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+.tab-btn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #dde2ef;
+  background: #fff;
+  font-size: 0.77rem;
+  color: #666;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.tab-btn:hover { background: #eef0f6; }
+.tab-btn.active { background: #1c2540; color: #fff; border-color: #1c2540; font-weight: 600; }
 
-    .todo-check {
-      width: 16px; height: 16px;
-      accent-color: #222;
-      cursor: pointer;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
+/* 진행률 */
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.73rem;
+  color: #a0aac0;
+  margin-bottom: 4px;
+}
+.progress-bar { height: 3px; background: #dde2ef; border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: #1c2540; border-radius: 4px; transition: width 0.3s; }
 
-    .todo-body { flex: 1; min-width: 0; }
-    .todo-text { font-size: 0.92rem; line-height: 1.4; word-break: break-all; }
+/* Todo 아이템 */
+.todo-list { display: flex; flex-direction: column; gap: 5px; }
+.todo-item {
+  background: #fff;
+  border: 1px solid #e4e8f2;
+  border-radius: 8px;
+  padding: 10px 11px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  animation: fadeIn 0.18s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.todo-item.done { opacity: 0.42; }
+.todo-item.done .todo-text { text-decoration: line-through; color: #999; }
 
-    .todo-meta {
-      display: flex;
-      gap: 5px;
-      margin-top: 5px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+.priority-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.todo-check   { width: 14px; height: 14px; accent-color: #1c2540; cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+.todo-body    { flex: 1; min-width: 0; }
+.todo-text    { font-size: 0.86rem; line-height: 1.4; word-break: break-all; }
+.todo-meta    { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
 
-    .badge {
-      font-size: 0.7rem;
-      padding: 2px 7px;
-      border-radius: 12px;
-      font-weight: 500;
-    }
+.badge { font-size: 0.66rem; padding: 2px 6px; border-radius: 10px; font-weight: 500; }
+.cat-수업 { background: #e8f0fe; color: #2a52c9; }
+.cat-가족 { background: #fce8e6; color: #b31412; }
+.cat-조합 { background: #e6f4ea; color: #0f6d2e; }
+.cat-쇼핑 { background: #fef3c7; color: #92600a; }
+.cat-기타 { background: #f1f3f4; color: #5f6368; }
+.due-ok   { background: #eaf4ea; color: #3a7a3a; }
+.due-soon { background: #fff5d6; color: #9a7a10; }
+.due-today{ background: #ffe0b2; color: #c07000; }
+.due-over { background: #fde8e8; color: #b52020; }
 
-    /* 카테고리 색상 */
-    .cat-수업 { background: #e8f0fe; color: #2a52c9; }
-    .cat-가족 { background: #fce8e6; color: #b31412; }
-    .cat-조합 { background: #e6f4ea; color: #0f6d2e; }
-    .cat-쇼핑 { background: #fef3c7; color: #92600a; }
-    .cat-기타 { background: #f1f3f4; color: #5f6368; }
+.todo-actions { display: flex; gap: 3px; flex-shrink: 0; }
+.btn-icon {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.73rem; color: #ccc; padding: 3px 5px;
+  border-radius: 4px; font-family: inherit; transition: all 0.15s;
+}
+.btn-icon:hover { color: #333; background: #f0f0f4; }
 
-    /* 마감일 */
-    .due-ok   { background: #eaf4ea; color: #3a7a3a; }
-    .due-soon { background: #fff5d6; color: #9a7a10; }
-    .due-today{ background: #ffe0b2; color: #c07000; }
-    .due-over { background: #fde8e8; color: #b52020; }
+.edit-form    { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.edit-actions { display: flex; gap: 6px; }
+.btn-sm       { border: none; border-radius: 5px; padding: 5px 12px; font-size: 0.79rem; cursor: pointer; font-family: inherit; }
+.btn-sm-dark  { background: #1c2540; color: #fff; }
+.btn-sm-light { background: #eef0f6; color: #333; }
+.btn-sm-light:hover { background: #e0e2ea; }
 
-    .todo-actions { display: flex; gap: 4px; flex-shrink: 0; }
-    .btn-icon {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 0.78rem;
-      color: #ccc;
-      padding: 3px 5px;
-      border-radius: 4px;
-      transition: color 0.15s, background 0.15s;
-      font-family: inherit;
-    }
-    .btn-icon:hover { color: #333; background: #f0f0f0; }
+.empty { text-align: center; color: #bbb; font-size: 0.84rem; padding: 28px 0; }
 
-    /* 수정 인라인 폼 */
-    .edit-form { display: flex; flex-direction: column; gap: 7px; flex: 1; }
-    .edit-actions { display: flex; gap: 7px; }
-    .btn-sm {
-      border: none;
-      border-radius: 5px;
-      padding: 5px 13px;
-      font-size: 0.82rem;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .btn-sm-dark { background: #222; color: #fff; }
-    .btn-sm-dark:hover { background: #000; }
-    .btn-sm-light { background: #f0f0f0; color: #333; }
-    .btn-sm-light:hover { background: #e0e0e0; }
+/* ══════════════════════════════════════
+   RIGHT PANEL
+══════════════════════════════════════ */
+#right-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
 
-    .empty { text-align: center; color: #bbb; font-size: 0.88rem; padding: 36px 0; }
-  </style>
+/* ══════════════════════════════════════
+   MEMO
+══════════════════════════════════════ */
+#memo-sec {
+  flex: 0 0 210px;
+  display: flex;
+  flex-direction: column;
+  background: #fffef5;
+  border-bottom: 2px solid #e4ddb8;
+}
+#memo-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 13px 6px;
+  background: #fdf8e4;
+  border-bottom: 1px solid #e8e0b8;
+  flex-shrink: 0;
+}
+#memo-hdr-left  { font-size: 0.8rem; font-weight: 700; color: #6a5820; }
+#memo-hdr-right { display: flex; align-items: center; gap: 10px; }
+#memo-count     { font-size: 0.7rem; color: #b8a860; }
+#memo-save-ind  { font-size: 0.65rem; color: #90a060; }
+#memo-area {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  padding: 10px 13px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  line-height: 1.75;
+  color: #3a3010;
+  background: #fffef5;
+}
+#memo-area::placeholder { color: #c8c0a0; }
+
+/* ══════════════════════════════════════
+   WHITEBOARD
+══════════════════════════════════════ */
+#wb-sec {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 화이트보드 툴바 */
+#wb-toolbar {
+  padding: 5px 10px;
+  background: #1c2540;
+  border-bottom: 1px solid #252e48;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+#wb-toolbar::-webkit-scrollbar { height: 3px; }
+#wb-toolbar::-webkit-scrollbar-thumb { background: #353f60; border-radius: 2px; }
+
+.wb-tool {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #c5d2e8;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.wb-tool:hover { background: rgba(255,255,255,0.14); }
+.wb-tool.active { background: #3a5a8a; border-color: #5a80b0; color: #fff; }
+
+.wb-sep { width: 1px; height: 22px; background: #252e48; margin: 0 3px; flex-shrink: 0; }
+.wb-sp  { flex: 1; }
+
+/* 색상 */
+#wb-colors { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.c-sw {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer; flex-shrink: 0;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.c-sw:hover   { transform: scale(1.2); }
+.c-sw.active  { border-color: #fff; transform: scale(1.15); }
+
+/* 굵기 */
+#wb-sizes { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
+.sz-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 5px; cursor: pointer;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.sz-btn:hover  { background: rgba(255,255,255,0.14); }
+.sz-btn.active { background: #3a5a8a; border-color: #5a80b0; }
+.sz-dot { background: #c5d2e8; border-radius: 50%; }
+
+/* 액션 버튼 */
+.wb-act {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #c5d2e8;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.wb-act:hover        { background: rgba(255,255,255,0.14); }
+.wb-act.wb-danger:hover { background: rgba(180,40,40,0.45); border-color: #a05050; }
+
+/* 캔버스 컨테이너 */
+#wb-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+#wb-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+</style>
 </head>
 <body>
 
-<header>
-  <h1>Todo</h1>
-  <small id="today-str"></small>
-</header>
+<!-- ══════════ TOPBAR ══════════ -->
+<div id="topbar">
 
-<div class="container">
+  <div id="dt-sec">
+    <div id="clock">--:--:--</div>
+    <div id="dateline">날짜를 불러오는 중...</div>
+  </div>
 
-  <!-- 입력 폼 -->
-  <div class="form-card">
-    <div class="form-row">
-      <input type="text" id="input-title" placeholder="할 일을 입력하세요" />
-      <button class="btn-primary" onclick="addTodo()">추가</button>
-    </div>
-    <div class="form-row">
-      <select id="input-cat">
-        <option value="수업">수업</option>
-        <option value="가족">가족</option>
-        <option value="조합">조합</option>
-        <option value="쇼핑">쇼핑</option>
-        <option value="기타" selected>기타</option>
-      </select>
-      <select id="input-priority">
-        <option value="high">높음</option>
-        <option value="mid" selected>중간</option>
-        <option value="low">낮음</option>
-      </select>
-      <input type="date" id="input-due" />
+  <div class="tb-div"></div>
+
+  <div id="weather-sec">
+    <span id="w-icon">🌡️</span>
+    <div>
+      <div id="w-temp" style="font-size:1rem;font-weight:700;color:#c5d2e8">--°C</div>
+      <div id="w-desc" style="font-size:0.68rem;color:#7a8dae">날씨 불러오는 중...</div>
     </div>
   </div>
 
-  <!-- 검색 + 필터 -->
-  <div class="toolbar">
-    <input type="text" id="search" placeholder="검색..." oninput="render()" />
-    <select id="filter-status" onchange="render()">
-      <option value="">전체 상태</option>
-      <option value="active">미완료</option>
-      <option value="done">완료</option>
-    </select>
-    <select id="filter-priority" onchange="render()">
-      <option value="">전체 우선순위</option>
-      <option value="high">높음</option>
-      <option value="mid">중간</option>
-      <option value="low">낮음</option>
-    </select>
+  <div id="tb-right">
+    <button id="tb-refresh" onclick="fetchWeather()" title="날씨 새로고침">⟳</button>
   </div>
-
-  <!-- 카테고리 탭 -->
-  <div class="tabs">
-    <button class="tab-btn active" data-cat="전체" onclick="selectTab(this)">전체</button>
-    <button class="tab-btn" data-cat="수업"  onclick="selectTab(this)">수업</button>
-    <button class="tab-btn" data-cat="가족"  onclick="selectTab(this)">가족</button>
-    <button class="tab-btn" data-cat="조합"  onclick="selectTab(this)">조합</button>
-    <button class="tab-btn" data-cat="쇼핑"  onclick="selectTab(this)">쇼핑</button>
-    <button class="tab-btn" data-cat="기타"  onclick="selectTab(this)">기타</button>
-  </div>
-
-  <!-- 진행률 -->
-  <div class="progress-wrap">
-    <div class="progress-info">
-      <span id="progress-text">0 / 0 완료</span>
-      <span id="progress-pct">0%</span>
-    </div>
-    <div class="progress-bar">
-      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-    </div>
-  </div>
-
-  <!-- 목록 -->
-  <div class="todo-list" id="todo-list"></div>
 
 </div>
 
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="dashboard">
+
+  <!-- ── LEFT: TODO ── -->
+  <div id="todo-panel">
+    <div class="panel-hdr">
+      <span class="panel-title">✅ 할 일</span>
+      <small class="panel-sub" id="today-str"></small>
+    </div>
+
+    <div class="form-card">
+      <div class="form-row">
+        <input type="text" id="input-title" placeholder="할 일을 입력하세요" />
+        <button class="btn-primary" onclick="addTodo()">추가</button>
+      </div>
+      <div class="form-row">
+        <select id="input-cat">
+          <option value="수업">수업</option>
+          <option value="가족">가족</option>
+          <option value="조합">조합</option>
+          <option value="쇼핑">쇼핑</option>
+          <option value="기타" selected>기타</option>
+        </select>
+        <select id="input-priority">
+          <option value="high">높음</option>
+          <option value="mid" selected>중간</option>
+          <option value="low">낮음</option>
+        </select>
+        <input type="date" id="input-due" />
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="검색..." oninput="renderTodo()" />
+      <select id="filter-status" onchange="renderTodo()">
+        <option value="">전체 상태</option>
+        <option value="active">미완료</option>
+        <option value="done">완료</option>
+      </select>
+      <select id="filter-priority" onchange="renderTodo()">
+        <option value="">전체 우선순위</option>
+        <option value="high">높음</option>
+        <option value="mid">중간</option>
+        <option value="low">낮음</option>
+      </select>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-cat="전체" onclick="selectTab(this)">전체</button>
+      <button class="tab-btn" data-cat="수업"  onclick="selectTab(this)">수업</button>
+      <button class="tab-btn" data-cat="가족"  onclick="selectTab(this)">가족</button>
+      <button class="tab-btn" data-cat="조합"  onclick="selectTab(this)">조합</button>
+      <button class="tab-btn" data-cat="쇼핑"  onclick="selectTab(this)">쇼핑</button>
+      <button class="tab-btn" data-cat="기타"  onclick="selectTab(this)">기타</button>
+    </div>
+
+    <div>
+      <div class="progress-info">
+        <span id="progress-text">0 / 0 완료</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="todo-list" id="todo-list"></div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div id="right-panel">
+
+    <!-- 메모 -->
+    <div id="memo-sec">
+      <div id="memo-hdr">
+        <span id="memo-hdr-left">📝 메모</span>
+        <div id="memo-hdr-right">
+          <span id="memo-save-ind"></span>
+          <span id="memo-count">0자</span>
+        </div>
+      </div>
+      <textarea id="memo-area" placeholder="자유롭게 메모하세요. 자동 저장됩니다."></textarea>
+    </div>
+
+    <!-- 화이트보드 -->
+    <div id="wb-sec">
+      <div id="wb-toolbar">
+        <button class="wb-tool active" id="tool-pen"    onclick="wbSetTool('pen')">🖊 펜</button>
+        <button class="wb-tool"        id="tool-eraser" onclick="wbSetTool('eraser')">⬜ 지우개</button>
+        <div class="wb-sep"></div>
+        <div id="wb-colors"></div>
+        <div class="wb-sep"></div>
+        <div id="wb-sizes"></div>
+        <div class="wb-sp"></div>
+        <button class="wb-act" onclick="wbUndo()" title="Ctrl+Z">↩ 취소</button>
+        <button class="wb-act wb-danger" onclick="wbClear()">🗑 전체 지우기</button>
+        <button class="wb-act" onclick="wbDownload()">💾 PNG 저장</button>
+      </div>
+      <div id="wb-wrap">
+        <canvas id="wb-canvas"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script>
-  let todos = JSON.parse(localStorage.getItem('my-todos') || '[]');
-  let currentTab = '전체';
+'use strict';
 
-  const PRIORITY_COLOR = { high: '#e57373', mid: '#f5c842', low: '#72b572' };
-  const PRIORITY_LABEL = { high: '높음', mid: '중간', low: '낮음' };
-  const CATS = ['수업','가족','조합','쇼핑','기타'];
-
-  // 오늘 날짜
-  document.getElementById('today-str').textContent =
-    new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
-
-  function save() { localStorage.setItem('my-todos', JSON.stringify(todos)); }
-
-  function selectTab(btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentTab = btn.dataset.cat;
-    render();
-  }
-
-  function getDueBadge(dueStr, done) {
-    if (!dueStr) return '';
-    const today = new Date(); today.setHours(0,0,0,0);
-    const due   = new Date(dueStr); due.setHours(0,0,0,0);
-    const diff  = Math.round((due - today) / 86400000);
-    if (done) return `<span class="badge due-ok">${dueStr}</span>`;
-    if (diff < 0)  return `<span class="badge due-over">기한 초과</span>`;
-    if (diff === 0) return `<span class="badge due-today">오늘 마감</span>`;
-    if (diff <= 3)  return `<span class="badge due-soon">D-${diff}</span>`;
-    return `<span class="badge due-ok">D-${diff}</span>`;
-  }
-
-  function addTodo() {
-    const title = document.getElementById('input-title').value.trim();
-    if (!title) { document.getElementById('input-title').focus(); return; }
-    todos.unshift({
-      id: Date.now(),
-      text: title,
-      cat: document.getElementById('input-cat').value,
-      priority: document.getElementById('input-priority').value,
-      due: document.getElementById('input-due').value,
-      done: false
-    });
-    document.getElementById('input-title').value = '';
-    document.getElementById('input-due').value = '';
-    save(); render();
-  }
-
-  function toggleDone(id) {
-    const t = todos.find(t => t.id === id);
-    if (t) { t.done = !t.done; save(); render(); }
-  }
-
-  function deleteTodo(id) {
-    todos = todos.filter(t => t.id !== id);
-    save(); render();
-  }
-
-  function startEdit(id) { render(id); }
-
-  function saveEdit(id) {
-    const t = todos.find(t => t.id === id);
-    if (!t) return;
-    const title = document.getElementById(`et-${id}`).value.trim();
-    if (!title) return;
-    t.text     = title;
-    t.cat      = document.getElementById(`ec-${id}`).value;
-    t.priority = document.getElementById(`ep-${id}`).value;
-    t.due      = document.getElementById(`ed-${id}`).value;
-    save(); render();
-  }
-
-  function getFiltered() {
-    const q    = document.getElementById('search').value.trim().toLowerCase();
-    const stat = document.getElementById('filter-status').value;
-    const pri  = document.getElementById('filter-priority').value;
-
-    return todos.filter(t => {
-      if (currentTab !== '전체' && t.cat !== currentTab) return false;
-      if (q   && !t.text.toLowerCase().includes(q)) return false;
-      if (stat === 'active' && t.done)  return false;
-      if (stat === 'done'   && !t.done) return false;
-      if (pri && t.priority !== pri) return false;
-      return true;
-    }).sort((a, b) => a.done === b.done ? 0 : a.done ? 1 : -1);
-  }
-
-  function render(editingId = null) {
-    const list = document.getElementById('todo-list');
-    const filtered = getFiltered();
-    const total = filtered.length;
-    const done  = filtered.filter(t => t.done).length;
-    const pct   = total === 0 ? 0 : Math.round(done / total * 100);
-
-    document.getElementById('progress-text').textContent = `${done} / ${total} 완료`;
-    document.getElementById('progress-pct').textContent  = `${pct}%`;
-    document.getElementById('progress-fill').style.width = `${pct}%`;
-
-    if (total === 0) {
-      list.innerHTML = '<div class="empty">할 일이 없습니다.</div>';
-      return;
-    }
-
-    list.innerHTML = filtered.map(t => {
-      if (t.id === editingId) {
-        return `
-          <div class="todo-item">
-            <span class="priority-dot" style="background:${PRIORITY_COLOR[t.priority]}"></span>
-            <div class="edit-form">
-              <div class="form-row">
-                <input type="text" id="et-${t.id}" value="${esc(t.text)}" style="flex:1;min-width:0" />
-              </div>
-              <div class="form-row">
-                <select id="ec-${t.id}">
-                  ${CATS.map(c => `<option${t.cat===c?' selected':''}>${c}</option>`).join('')}
-                </select>
-                <select id="ep-${t.id}">
-                  ${['high','mid','low'].map(p => `<option value="${p}"${t.priority===p?' selected':''}>${PRIORITY_LABEL[p]}</option>`).join('')}
-                </select>
-                <input type="date" id="ed-${t.id}" value="${t.due||''}" />
-              </div>
-              <div class="edit-actions">
-                <button class="btn-sm btn-sm-dark" onclick="saveEdit(${t.id})">저장</button>
-                <button class="btn-sm btn-sm-light" onclick="render()">취소</button>
-              </div>
-            </div>
-          </div>`;
-      }
-
-      return `
-        <div class="todo-item${t.done ? ' done' : ''}">
-          <span class="priority-dot" style="background:${PRIORITY_COLOR[t.priority]}"></span>
-          <input type="checkbox" class="todo-check" ${t.done?'checked':''} onchange="toggleDone(${t.id})" />
-          <div class="todo-body">
-            <div class="todo-text">${esc(t.text)}</div>
-            <div class="todo-meta">
-              <span class="badge cat-${t.cat}">${t.cat}</span>
-              ${getDueBadge(t.due, t.done)}
-            </div>
-          </div>
-          <div class="todo-actions">
-            <button class="btn-icon" onclick="startEdit(${t.id})">수정</button>
-            <button class="btn-icon" onclick="deleteTodo(${t.id})">삭제</button>
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  function esc(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  document.getElementById('input-title').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addTodo();
+/* ═══════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════ */
+function tickClock() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('clock').textContent =
+    `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const ds = now.toLocaleDateString('ko-KR', {
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
   });
+  document.getElementById('dateline').textContent = ds;
+  document.getElementById('today-str').textContent = ds;
+}
+setInterval(tickClock, 1000);
+tickClock();
 
-  render();
+/* ═══════════════════════════════════════
+   WEATHER  (wttr.in – CORS 허용, 키 불필요)
+═══════════════════════════════════════ */
+function wxCode(code) {
+  const c = parseInt(code);
+  if (c === 113)                    return ['☀️',  '맑음'];
+  if (c === 116)                    return ['⛅',  '구름 조금'];
+  if (c >= 119 && c <= 122)         return ['☁️',  '흐림'];
+  if (c >= 143 && c <= 260)         return ['🌫️', '안개'];
+  if (c >= 263 && c <= 299)         return ['🌦️', '이슬비'];
+  if (c >= 302 && c <= 359)         return ['🌧️', '비'];
+  if (c >= 362 && c <= 377)         return ['🌨️', '진눈깨비'];
+  if (c === 200 || c >= 386)        return ['⛈️',  '천둥번개'];
+  return ['🌡️', '날씨'];
+}
+
+async function fetchWeather() {
+  try {
+    const r = await fetch('https://wttr.in/Busan?format=j1', { cache: 'no-store' });
+    const d = await r.json();
+    const c = d.current_condition[0];
+    const [icon, desc] = wxCode(c.weatherCode);
+    document.getElementById('w-icon').textContent = icon;
+    document.getElementById('w-temp').textContent = `${c.temp_C}°C`;
+    document.getElementById('w-desc').textContent = `부산 · ${desc} · 습도 ${c.humidity}%`;
+  } catch {
+    document.getElementById('w-desc').textContent = '날씨 정보를 불러올 수 없습니다';
+  }
+}
+
+fetchWeather();
+setInterval(fetchWeather, 30 * 60 * 1000);
+
+/* ═══════════════════════════════════════
+   TODO
+═══════════════════════════════════════ */
+let todos = JSON.parse(localStorage.getItem('my-todos') || '[]');
+let currentTab = '전체';
+const P_COLOR = { high: '#e57373', mid: '#f5c842', low: '#72b572' };
+const P_LABEL = { high: '높음', mid: '중간', low: '낮음' };
+const CATS    = ['수업','가족','조합','쇼핑','기타'];
+
+function saveTodos() { localStorage.setItem('my-todos', JSON.stringify(todos)); }
+
+function selectTab(btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTab = btn.dataset.cat;
+  renderTodo();
+}
+
+function dueBadge(s, done) {
+  if (!s) return '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due   = new Date(s); due.setHours(0,0,0,0);
+  const d     = Math.round((due - today) / 86400000);
+  if (done)    return `<span class="badge due-ok">${s}</span>`;
+  if (d < 0)   return `<span class="badge due-over">기한 초과</span>`;
+  if (d === 0) return `<span class="badge due-today">오늘 마감</span>`;
+  if (d <= 3)  return `<span class="badge due-soon">D-${d}</span>`;
+  return       `<span class="badge due-ok">D-${d}</span>`;
+}
+
+function addTodo() {
+  const t = document.getElementById('input-title').value.trim();
+  if (!t) { document.getElementById('input-title').focus(); return; }
+  todos.unshift({
+    id: Date.now(),
+    text: t,
+    cat:      document.getElementById('input-cat').value,
+    priority: document.getElementById('input-priority').value,
+    due:      document.getElementById('input-due').value,
+    done:     false
+  });
+  document.getElementById('input-title').value = '';
+  document.getElementById('input-due').value   = '';
+  saveTodos(); renderTodo();
+}
+
+function toggleDone(id) {
+  const t = todos.find(t => t.id === id);
+  if (t) { t.done = !t.done; saveTodos(); renderTodo(); }
+}
+function deleteTodo(id)  { todos = todos.filter(t => t.id !== id); saveTodos(); renderTodo(); }
+function startEdit(id)   { renderTodo(id); }
+function saveEdit(id) {
+  const t = todos.find(t => t.id === id);
+  if (!t) return;
+  const v = document.getElementById(`et-${id}`).value.trim();
+  if (!v) return;
+  t.text     = v;
+  t.cat      = document.getElementById(`ec-${id}`).value;
+  t.priority = document.getElementById(`ep-${id}`).value;
+  t.due      = document.getElementById(`ed-${id}`).value;
+  saveTodos(); renderTodo();
+}
+
+function getFiltered() {
+  const q   = document.getElementById('search').value.trim().toLowerCase();
+  const st  = document.getElementById('filter-status').value;
+  const pri = document.getElementById('filter-priority').value;
+  return todos.filter(t => {
+    if (currentTab !== '전체' && t.cat !== currentTab) return false;
+    if (q  && !t.text.toLowerCase().includes(q)) return false;
+    if (st === 'active' &&  t.done) return false;
+    if (st === 'done'   && !t.done) return false;
+    if (pri && t.priority !== pri)  return false;
+    return true;
+  }).sort((a, b) => a.done === b.done ? 0 : a.done ? 1 : -1);
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderTodo(editId = null) {
+  const list     = document.getElementById('todo-list');
+  const filtered = getFiltered();
+  const total    = filtered.length;
+  const done     = filtered.filter(t => t.done).length;
+  const pct      = total === 0 ? 0 : Math.round(done / total * 100);
+
+  document.getElementById('progress-text').textContent = `${done} / ${total} 완료`;
+  document.getElementById('progress-pct').textContent  = `${pct}%`;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+
+  if (total === 0) { list.innerHTML = '<div class="empty">할 일이 없습니다.</div>'; return; }
+
+  list.innerHTML = filtered.map(t => {
+    if (t.id === editId) return `
+      <div class="todo-item">
+        <span class="priority-dot" style="background:${P_COLOR[t.priority]}"></span>
+        <div class="edit-form">
+          <div class="form-row">
+            <input type="text" id="et-${t.id}" value="${esc(t.text)}" style="flex:1;min-width:0"/>
+          </div>
+          <div class="form-row">
+            <select id="ec-${t.id}">${CATS.map(c=>`<option${t.cat===c?' selected':''}>${c}</option>`).join('')}</select>
+            <select id="ep-${t.id}">${['high','mid','low'].map(p=>`<option value="${p}"${t.priority===p?' selected':''}>${P_LABEL[p]}</option>`).join('')}</select>
+            <input type="date" id="ed-${t.id}" value="${t.due||''}"/>
+          </div>
+          <div class="edit-actions">
+            <button class="btn-sm btn-sm-dark"  onclick="saveEdit(${t.id})">저장</button>
+            <button class="btn-sm btn-sm-light" onclick="renderTodo()">취소</button>
+          </div>
+        </div>
+      </div>`;
+
+    return `
+      <div class="todo-item${t.done?' done':''}">
+        <span class="priority-dot" style="background:${P_COLOR[t.priority]}"></span>
+        <input type="checkbox" class="todo-check" ${t.done?'checked':''} onchange="toggleDone(${t.id})"/>
+        <div class="todo-body">
+          <div class="todo-text">${esc(t.text)}</div>
+          <div class="todo-meta">
+            <span class="badge cat-${t.cat}">${t.cat}</span>
+            ${dueBadge(t.due, t.done)}
+          </div>
+        </div>
+        <div class="todo-actions">
+          <button class="btn-icon" onclick="startEdit(${t.id})">수정</button>
+          <button class="btn-icon" onclick="deleteTodo(${t.id})">삭제</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+document.getElementById('input-title').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTodo();
+});
+renderTodo();
+
+/* ═══════════════════════════════════════
+   MEMO
+═══════════════════════════════════════ */
+const memoEl  = document.getElementById('memo-area');
+const memoInd = document.getElementById('memo-save-ind');
+const memoCnt = document.getElementById('memo-count');
+let   memoTimer;
+
+memoEl.value = localStorage.getItem('my-memo') || '';
+memoCnt.textContent = memoEl.value.length + '자';
+
+memoEl.addEventListener('input', () => {
+  memoCnt.textContent = memoEl.value.length + '자';
+  memoInd.textContent = '';
+  clearTimeout(memoTimer);
+  memoTimer = setTimeout(() => {
+    localStorage.setItem('my-memo', memoEl.value);
+    memoInd.textContent = '저장됨 ✓';
+    setTimeout(() => { memoInd.textContent = ''; }, 1500);
+  }, 800);
+});
+
+/* ═══════════════════════════════════════
+   WHITEBOARD
+═══════════════════════════════════════ */
+const WB_COLORS = [
+  '#111111','#555555','#ef4444','#f97316',
+  '#eab308','#22c55e','#3b82f6','#8b5cf6',
+  '#ec4899','#06b6d4'
+];
+const WB_SIZES  = [3, 6, 12, 24];
+const WB_DOT_SZ = [6, 10, 16, 22];
+
+let wbTool    = 'pen';
+let wbColor   = WB_COLORS[0];
+let wbSize    = WB_SIZES[0];
+let wbDown    = false;
+let wbX = 0, wbY = 0;
+let wbUndo$   = [];
+let wbSaveT;
+
+const wbCanvas = document.getElementById('wb-canvas');
+const wbCtx    = wbCanvas.getContext('2d');
+
+/* 색상 버튼 생성 */
+const colorWrap = document.getElementById('wb-colors');
+WB_COLORS.forEach((c, i) => {
+  const el = document.createElement('div');
+  el.className = 'c-sw' + (i === 0 ? ' active' : '');
+  el.style.background = c;
+  el.title = c;
+  el.onclick = () => {
+    document.querySelectorAll('.c-sw').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    wbColor = c;
+    if (wbTool === 'eraser') wbSetTool('pen');
+  };
+  colorWrap.appendChild(el);
+});
+
+/* 굵기 버튼 생성 */
+const sizeWrap = document.getElementById('wb-sizes');
+WB_SIZES.forEach((s, i) => {
+  const btn = document.createElement('div');
+  btn.className = 'sz-btn' + (i === 0 ? ' active' : '');
+  btn.title = `${s}px`;
+  btn.onclick = () => {
+    document.querySelectorAll('.sz-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    wbSize = s;
+  };
+  const dot = document.createElement('div');
+  dot.className = 'sz-dot';
+  dot.style.cssText = `width:${WB_DOT_SZ[i]}px;height:${WB_DOT_SZ[i]}px`;
+  btn.appendChild(dot);
+  sizeWrap.appendChild(btn);
+});
+
+function wbSetTool(tool) {
+  wbTool = tool;
+  document.getElementById('tool-pen').classList.toggle('active',    tool === 'pen');
+  document.getElementById('tool-eraser').classList.toggle('active', tool === 'eraser');
+  wbCanvas.style.cursor = tool === 'eraser' ? 'cell' : 'crosshair';
+}
+
+function wbPos(clientX, clientY) {
+  const r = wbCanvas.getBoundingClientRect();
+  return { x: clientX - r.left, y: clientY - r.top };
+}
+
+function wbSaveUndo() {
+  wbUndo$.push(wbCtx.getImageData(0, 0, wbCanvas.width, wbCanvas.height));
+  if (wbUndo$.length > 15) wbUndo$.shift();
+}
+
+function wbUndo() {
+  if (!wbUndo$.length) return;
+  wbCtx.putImageData(wbUndo$.pop(), 0, 0);
+  wbScheduleSave();
+}
+
+function wbClear() {
+  if (!confirm('화이트보드를 모두 지울까요?')) return;
+  wbSaveUndo();
+  wbCtx.fillStyle = '#fff';
+  wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+  wbScheduleSave();
+}
+
+function wbDownload() {
+  const a  = document.createElement('a');
+  const dt = new Date();
+  const ts = `${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,'0')}${String(dt.getDate()).padStart(2,'0')}`;
+  a.download = `whiteboard_${ts}.png`;
+  a.href = wbCanvas.toDataURL('image/png');
+  a.click();
+}
+
+function wbScheduleSave() {
+  clearTimeout(wbSaveT);
+  wbSaveT = setTimeout(() => {
+    try { localStorage.setItem('my-whiteboard', wbCanvas.toDataURL('image/png')); }
+    catch { /* 저장 공간 부족 */ }
+  }, 1500);
+}
+
+function wbStroke(x, y) {
+  wbCtx.beginPath();
+  wbCtx.strokeStyle = wbTool === 'eraser' ? '#ffffff' : wbColor;
+  wbCtx.lineWidth   = wbTool === 'eraser' ? wbSize * 3 : wbSize;
+  wbCtx.lineCap     = 'round';
+  wbCtx.lineJoin    = 'round';
+  wbCtx.moveTo(wbX, wbY);
+  wbCtx.lineTo(x, y);
+  wbCtx.stroke();
+  wbX = x; wbY = y;
+}
+
+/* 마우스 이벤트 */
+wbCanvas.addEventListener('mousedown', e => {
+  wbDown = true;
+  const p = wbPos(e.clientX, e.clientY);
+  wbX = p.x; wbY = p.y;
+  wbSaveUndo();
+  wbCtx.beginPath();
+  wbCtx.arc(p.x, p.y, (wbTool === 'eraser' ? wbSize * 3 : wbSize) / 2, 0, Math.PI * 2);
+  wbCtx.fillStyle = wbTool === 'eraser' ? '#ffffff' : wbColor;
+  wbCtx.fill();
+});
+wbCanvas.addEventListener('mousemove', e => {
+  if (!wbDown) return;
+  const p = wbPos(e.clientX, e.clientY);
+  wbStroke(p.x, p.y);
+});
+wbCanvas.addEventListener('mouseup',    () => { wbDown = false; wbScheduleSave(); });
+wbCanvas.addEventListener('mouseleave', () => { if (wbDown) { wbDown = false; wbScheduleSave(); } });
+
+/* 터치 이벤트 */
+wbCanvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  wbDown = true;
+  const p = wbPos(t.clientX, t.clientY);
+  wbX = p.x; wbY = p.y;
+  wbSaveUndo();
+  wbCtx.beginPath();
+  wbCtx.arc(p.x, p.y, (wbTool === 'eraser' ? wbSize * 3 : wbSize) / 2, 0, Math.PI * 2);
+  wbCtx.fillStyle = wbTool === 'eraser' ? '#ffffff' : wbColor;
+  wbCtx.fill();
+}, { passive: false });
+wbCanvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!wbDown) return;
+  const t = e.touches[0];
+  const p = wbPos(t.clientX, t.clientY);
+  wbStroke(p.x, p.y);
+}, { passive: false });
+wbCanvas.addEventListener('touchend', () => { wbDown = false; wbScheduleSave(); });
+
+/* 키보드 단축키 */
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); wbUndo(); }
+});
+
+/* 캔버스 초기화 */
+function initWb() {
+  const wrap = document.getElementById('wb-wrap');
+  wbCanvas.width  = wrap.clientWidth  || 800;
+  wbCanvas.height = wrap.clientHeight || 500;
+  wbCtx.fillStyle = '#ffffff';
+  wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+  const saved = localStorage.getItem('my-whiteboard');
+  if (saved) {
+    const img = new Image();
+    img.onload = () => wbCtx.drawImage(img, 0, 0, wbCanvas.width, wbCanvas.height);
+    img.src = saved;
+  }
+}
+
+/* 창 크기 변경 시 캔버스 유지 */
+let resizeT;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeT);
+  const dataUrl = wbCanvas.toDataURL();
+  resizeT = setTimeout(() => {
+    const wrap = document.getElementById('wb-wrap');
+    wbCanvas.width  = wrap.clientWidth;
+    wbCanvas.height = wrap.clientHeight;
+    wbCtx.fillStyle = '#ffffff';
+    wbCtx.fillRect(0, 0, wbCanvas.width, wbCanvas.height);
+    const img = new Image();
+    img.onload = () => wbCtx.drawImage(img, 0, 0, wbCanvas.width, wbCanvas.height);
+    img.src = dataUrl;
+  }, 300);
+});
+
+setTimeout(initWb, 120);
 </script>
 </body>
 </html>
